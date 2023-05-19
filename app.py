@@ -38,12 +38,12 @@ df = pd.read_excel(screening_file,sheet_name="Sheet1",index_col=0 )
 # st.write("データ更新日：" + update_date)
 
 
-# st.subheader('Screening Option') 
-# st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">手法選択</p>', unsafe_allow_html=True)
-# method_menu = ["Granvil", "PerfectOrder", "Zenmo #工事中", "All Data"]
-# method = option_menu("Method Menu", options= method_menu,
-#     #icons=['house', 'gear', 'gear'],
-#     menu_icon="cast", default_index=0, orientation="horizontal")
+st.subheader('Screening Option') 
+st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">手法選択</p>', unsafe_allow_html=True)
+method_menu = ["Granvil", "PerfectOrder", "Zenmo #工事中", "All Data"]
+method = option_menu("Method Menu", options= method_menu,
+    #icons=['house', 'gear', 'gear'],
+    menu_icon="cast", default_index=0, orientation="horizontal")
 
 
 st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">プライスアクション・移動平均線</p>', unsafe_allow_html=True)
