@@ -1,4 +1,3 @@
-
 import streamlit as st
 import streamlit.components.v1 as stc
 import pandas as pd
@@ -20,6 +19,11 @@ def clear_multi():
     st.session_state.multiselect3 = []
     return
 
+def clear_input():
+    st.session_state.input_txt = ""
+    return
+
+#github
 st.set_page_config(layout="wide")
 
 l2 = sorted(glob.glob('files/*.xlsx', recursive=True))
@@ -27,19 +31,22 @@ p = pathlib.Path(l2[-1])
 update_date = os.path.split(p)[1].replace("_demo.xlsx","")
 st.write("データ更新日：" + update_date)
 
-#screening_file = '/content/drive/MyDrive/ColabNotebooks/kaba_file2/20230506/230502_demo.xlsx'
-#df = pd.read_excel(screening_file,sheet_name="DEMO")
-
 screening_file = p
 df = pd.read_excel(screening_file,sheet_name="Sheet1",index_col=0 )
 
+#ローカル用
+# screening_file = '/content/drive/MyDrive/master_ColabNotebooks/kabu_files/multi_account_files/20230518/230518_demo.xlsx'
+# df = pd.read_excel(screening_file,index_col=0 )
+# update_date = os.path.basename(screening_file).replace("_demo.xlsx","")
+# st.write("データ更新日：" + update_date)
 
-st.subheader('Screening Option') 
-st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">手法選択</p>', unsafe_allow_html=True)
-method_menu = ["Granvil", "PerfectOrder", "Zenmo #工事中", "All Data"]
-method = option_menu("Method Menu", options= method_menu,
-    #icons=['house', 'gear', 'gear'],
-    menu_icon="cast", default_index=0, orientation="horizontal")
+
+# st.subheader('Screening Option') 
+# st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">手法選択</p>', unsafe_allow_html=True)
+# method_menu = ["Granvil", "PerfectOrder", "Zenmo #工事中", "All Data"]
+# method = option_menu("Method Menu", options= method_menu,
+#     #icons=['house', 'gear', 'gear'],
+#     menu_icon="cast", default_index=0, orientation="horizontal")
 
 
 st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">プライスアクション・移動平均線</p>', unsafe_allow_html=True)
@@ -54,7 +61,19 @@ multi_selectbox_columns = df.filter(like="R@",axis=1).columns
 select_option = sorted(list(df[multi_selectbox_columns].stack().unique()))
 
 multi_selectbox_columns2 = df.filter(like="MA@",axis=1).columns
-select_option2 = sorted(list(df[multi_selectbox_columns2].stack().unique()))
+SO2 = sorted(list(df[multi_selectbox_columns2].stack().unique()))
+
+so2 = ([s for s in SO2 if '傾き正' in s]
+        +[s for s in SO2 if 'V字に反転' in s]
+        +[s for s in SO2 if '収束' in s]
+        +[s for s in SO2 if '乖離小' in s]
+        +[s for s in SO2 if 'ローソク足内' in s]
+        +[s for s in SO2 if '下髭内' in s]
+        +[s for s in SO2 if '連日推移' in s]
+        +[s for s in SO2 if 'PO' in s]
+        +[s for s in SO2 if '>' in s])
+
+select_option2 = so2 + list(set(SO2) - set(so2))
 
 multi_selectbox_columns3 = df.filter(like="Vol@",axis=1).columns
 select_option3 = sorted(list(df[multi_selectbox_columns3].stack().unique()))
@@ -64,8 +83,10 @@ select_option3 = sorted(list(df[multi_selectbox_columns3].stack().unique()))
 if default_button =='Granvil_example':
   with col1:
       mul_sel = st.multiselect("ローソク足・プライスアクション", (select_option),default=["陽線"],key="multiselect") #選択項目
+
   with col2:
       mul_sel2 = st.multiselect("移動平均線との関係", (select_option2),default=["SMA25:傾き正","SMA25 > 75","SMA5:V字に反転"],key="multiselect2")#選択項目 
+
   with col3:
       mul_sel3 = st.multiselect("出来高", (select_option3),default=["出来高前日比プラス"],key="multiselect3")#選択項目
 
@@ -86,6 +107,7 @@ elif default_button =='PerfectOrder_example':
 #       mul_sel3 = st.multiselect("出来高", (select_option3),default=["出来高前日比プラス"],key="multiselect3")#選択項目
 
 
+
 st.button("Clear selection", on_click=clear_multi)
 st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">設定変更後にdefault条件に戻したい場合はブラウザを再読込みしてください。<br>その場合Storage Listも初期化されます。</p>', unsafe_allow_html=True)
 
@@ -94,6 +116,25 @@ mul_sel_all = mul_sel + mul_sel2 + mul_sel3
 
 #選択された項目を含む列
 select_columns = df.columns[df.isin(mul_sel).sum(axis=0)>0].tolist() + df.columns[df.isin(mul_sel2).sum(axis=0)>0].tolist() + df.columns[df.isin(mul_sel3).sum(axis=0)>0].tolist()
+
+with st.expander('条件をtxtファイルに保存・貼付け'):
+    if len(mul_sel_all)>0:
+        text_contents = str(method) + "/" + str(mul_sel_all)
+        st.download_button(label='条件をtxtファイルに保存', data = text_contents ,file_name='condition.txt',mime='text/csv',)
+    else:
+        st.info('条件を設定するとダウンロードボタンが出ます', icon="ℹ️")
+
+    input_condition =st.text_input('保存したtxtファイルの文字列を貼付けてください', '', key = "input_txt")
+    st.button("Clear input text", on_click=clear_input)
+    st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">記載形式を間違えるとエラーとなります。</p>', unsafe_allow_html=True)
+
+    if len(input_condition)>0:
+        #文字列から条件を切り出し
+        method = input_condition.split("/")[0].split(",")[0]
+        mul_sel_all = eval(input_condition.split("/")[1])
+
+        #選択された項目を含む列
+        select_columns = df.columns[df.isin(mul_sel_all).sum(axis=0)>0].tolist()
 
 #選択された項目で抽出したデータフレーム
 
@@ -158,7 +199,16 @@ with st.sidebar:
         for i, selcect in enumerate(selects):
             code = selects[i]["ticker"]
             stock_name = selects[i]["name"]
+            Kessan_schedule = selects[i]["決算発表日"]
             st.write(f"Kabutan URL [{code}  {stock_name} ](https://kabutan.jp/stock/chart?code={code})")
+
+            if Kessan_schedule is not None : 
+                st.write(f"決算発表日(予) {Kessan_schedule}")
+                st.markdown('<p style="font-family:sans-serif; color:blue; font-size: 10px;">予定日は掲載後に変更される可能性があります。</p>', unsafe_allow_html=True)
+            else:
+                Kessan_schedule = "未定"
+                st.write(f"決算発表日(予) {Kessan_schedule}")
+
             img=f"https://www.kabudragon.com/chart/s={code}/e={update_date}.png/"
             cache_image(img) #cache
 
@@ -177,4 +227,3 @@ with st.sidebar:
                     st.write(str(storaged_data))
     else:
         pass
-
