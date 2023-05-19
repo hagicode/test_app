@@ -19,9 +19,6 @@ def clear_multi():
     st.session_state.multiselect3 = []
     return
 
-def clear_input():
-    st.session_state.input_txt = ""
-    return
 
 #github
 st.set_page_config(layout="wide")
@@ -116,6 +113,10 @@ mul_sel_all = mul_sel + mul_sel2 + mul_sel3
 
 #選択された項目を含む列
 select_columns = df.columns[df.isin(mul_sel).sum(axis=0)>0].tolist() + df.columns[df.isin(mul_sel2).sum(axis=0)>0].tolist() + df.columns[df.isin(mul_sel3).sum(axis=0)>0].tolist()
+
+def clear_input():
+    st.session_state.input_txt = ""
+    return
 
 with st.expander('条件をtxtファイルに保存・貼付け'):
     if len(mul_sel_all)>0:
